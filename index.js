@@ -3,8 +3,18 @@ const express = require('express')
 const morgan = require('morgan')
 const app = express()
 
+morgan.token('reqBody', function getBody (request) {
+    if (JSON.stringify(request.body) !== '{}') {
+        return JSON.stringify(request.body)
+    }
+    else {
+        return null
+    }
+  })
+
+
 app.use(express.json())
-app.use(morgan('tiny'))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :reqBody'))
 
 let persons = [
         { 
@@ -30,12 +40,12 @@ let persons = [
     ]
 
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   response.json(persons)
 })
 
-app.post('/api/persons', (request, response) => {
-    const person = request.body
+app.post('/api/persons', (request, response, next) => {
+    const person = {...request.body}
 
     if (!person.name) {
         return response.status(400).json({ 
